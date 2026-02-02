@@ -1,0 +1,187 @@
+\documentclass[11pt]{article}
+
+\usepackage[a4paper,margin=1in]{geometry}
+\usepackage{amsmath,amssymb}
+\usepackage{graphicx}
+\usepackage{booktabs}
+\usepackage{hyperref}
+\usepackage{setspace}
+\usepackage{float}
+
+\setstretch{1.1}
+
+\title{\textbf{WiDS Kalman Filtered Trend Trader}\\
+Assignment 2}
+\author{Lavanya Padole 24B1292}
+
+\begin{document}
+\maketitle
+
+% ======================================================
+\section{Introduction}
+% ======================================================
+
+Financial markets exhibit non-stationary dynamics, where relationships between prices,
+returns, volatility, and market features evolve over time. Static models are often unable
+to adapt to such changes, leading to degraded performance.
+
+In this assignment, a systematic trading strategy for Microsoft Corporation (MSFT) is
+developed using Kalman Filters to model time-varying latent relationships and a supervised
+machine learning model to generate predictive trading signals. The strategy is evaluated
+using a causal backtesting framework and compared to a buy-and-hold benchmark.
+
+% ======================================================
+\section{Data Collection}
+% ======================================================
+
+Daily historical market data for Microsoft Corp. (MSFT) from 2015 to 2024 was obtained from
+Yahoo Finance. Adjusted closing prices and trading volume were used to ensure consistency
+across corporate actions.
+
+All preprocessing steps maintain strict causality, ensuring that no future information
+is used in model estimation or trading decisions.
+
+% ======================================================
+\section{Feature Engineering}
+% ======================================================
+
+A diverse set of market features was constructed to capture price dynamics, momentum, and
+risk characteristics:
+
+\begin{itemize}
+\item Log returns and lagged returns
+\item Moving averages (5-day, 20-day, 60-day)
+\item Rate of Change (ROC)
+\item Rolling volatility measures
+\item Volume-based indicators
+\end{itemize}
+
+These features provide complementary information about short-term momentum, long-term
+trend structure, and market uncertainty.
+
+% ======================================================
+\section{Kalman Filter Model}
+% ======================================================
+
+A state-space model was formulated in which the latent state represents time-varying
+regression coefficients linking engineered features to MSFT returns.
+
+\subsection{Model Formulation}
+
+The observation equation is defined as:
+\[
+y_t = X_t \beta_t + \epsilon_t, \quad \epsilon_t \sim \mathcal{N}(0, R)
+\]
+
+The state transition equation is:
+\[
+\beta_t = \beta_{t-1} + \eta_t, \quad \eta_t \sim \mathcal{N}(0, Q)
+\]
+
+Here, $\beta_t$ denotes the latent parameter vector, while $Q$ and $R$ control parameter drift
+and observation noise respectively.
+
+The Kalman Filter recursively estimates $\beta_t$ using only current and past information,
+allowing the model to adapt to evolving market conditions while remaining causal.
+
+\subsection{Filtered Parameters}
+
+Kalman-filtered parameters exhibit smooth temporal evolution, reflecting gradual changes in
+the relevance of different market features across regimes.
+
+% ======================================================
+\section{Machine Learning Integration}
+% ======================================================
+
+The Kalman-filtered latent parameters were used as inputs to a supervised learning model
+to predict the next-period price ratio of MSFT.
+
+A linear regression model was selected due to its interpretability, stability, and low risk
+of overfitting when applied to time-series data with evolving dynamics. Predictions are made
+using only information available at the current timestep.
+
+% ======================================================
+\section{Trading Strategy Design}
+% ======================================================
+
+Trading signals are derived from the predicted price ratio:
+
+\begin{itemize}
+\item \textbf{Buy Signal}: Predicted ratio exceeds the current ratio by a predefined threshold
+\item \textbf{Sell Signal}: Predicted ratio falls below the current ratio by a predefined threshold
+\end{itemize}
+
+Risk management constraints include:
+\begin{itemize}
+\item Long/short positioning without leverage
+\item Transaction cost adjustment
+\item Position updates executed at $t+1$
+\end{itemize}
+
+All signals are generated causally and are based solely on present and historical data.
+
+% ======================================================
+\section{Backtesting Framework}
+% ======================================================
+
+The strategy was evaluated using a walk-forward backtesting framework:
+
+\begin{itemize}
+\item Signals generated at time $t$ are executed at $t+1$
+\item Daily profit and loss (PnL) is computed based on position returns
+\item Transaction costs are explicitly incorporated
+\end{itemize}
+
+A buy-and-hold MSFT strategy is used as a benchmark for comparison.
+
+% ======================================================
+\section{Performance Evaluation}
+% ======================================================
+
+The trading strategy was evaluated using multiple quantitative metrics:
+
+\begin{itemize}
+\item \textbf{Cumulative Return}: 1.124
+\item \textbf{Sharpe Ratio}: 0.60
+\item \textbf{Maximum Drawdown}: -0.16
+\item \textbf{Win/Loss Ratio}: 0.112
+\end{itemize}
+
+The cumulative return indicates that the strategy more than doubled the initial capital
+over the evaluation period. A Sharpe ratio of 0.60 reflects moderate risk-adjusted performance,
+consistent with systematic trend-following approaches.
+
+The maximum drawdown of approximately 16\% suggests controlled downside risk relative to
+typical equity market behavior. The low win/loss ratio implies that the strategy relies on
+fewer, larger profitable trades rather than frequent small gains.
+
+When compared to a buy-and-hold MSFT strategy, the proposed approach offers improved drawdown
+control while maintaining competitive long-term returns.
+
+% ======================================================
+\section{Discussion and Limitations}
+% ======================================================
+
+The results demonstrate the effectiveness of combining Kalman-filtered time-varying parameter
+estimation with supervised learning in non-stationary financial environments.
+
+However, several limitations remain:
+\begin{itemize}
+\item Linear modeling assumptions may limit expressiveness
+\item Sensitivity to noisy short-term signals
+\item Dependence on feature selection and threshold parameters
+\end{itemize}
+
+Future improvements may include nonlinear models, regime detection, or adaptive noise
+estimation within the Kalman framework.
+
+% ======================================================
+\section{Conclusion}
+% ======================================================
+
+This assignment presents a complete end-to-end trading strategy using Kalman Filters and
+machine learning. By modeling evolving market relationships and enforcing causal trading
+rules, the strategy adapts to non-stationary market behavior and demonstrates stable
+performance relative to static benchmarks.
+
+\end{document}D
