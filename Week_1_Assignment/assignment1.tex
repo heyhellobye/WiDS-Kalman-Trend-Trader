@@ -1,0 +1,212 @@
+\documentclass[11pt]{article}
+
+\usepackage[a4paper,margin=1in]{geometry}
+\usepackage{amsmath,amssymb}
+\usepackage{graphicx}
+\usepackage{booktabs}
+\usepackage{hyperref}
+\usepackage{setspace}
+\usepackage{float}
+\usepackage{listings}
+\usepackage{xcolor}
+
+\setstretch{1.1}
+
+\lstset{
+  language=Python,
+  basicstyle=\ttfamily\small,
+  keywordstyle=\color{blue},
+  commentstyle=\color{gray},
+  stringstyle=\color{red},
+  numbers=left,
+  numberstyle=\tiny,
+  frame=single,
+  breaklines=true,
+  showstringspaces=false
+}
+
+\title{\textbf{WiDS Kalman Filtered Trend Trader}\\
+Assignment 1}
+\author{Lavanya Padole 24B1292}
+
+\begin{document}
+\maketitle
+
+% ======================================================
+\section{Question 1: Linear Regression}
+% ======================================================
+
+\subsection{Model Definition}
+
+The multiple linear regression model with $p$ predictors is written as:
+\[
+y = X\beta + \epsilon,
+\]
+where $X \in \mathbb{R}^{n \times (p+1)}$ is the design matrix with an intercept column,
+$\beta = (\beta_0, \beta_1, \ldots, \beta_p)^\top$ is the parameter vector, and
+$\epsilon \sim \mathcal{N}(0, \sigma^2 I)$ is the noise term.
+
+\subsection{OLS Objective and Solution}
+
+Ordinary Least Squares minimizes the Mean Squared Error:
+\[
+J(\beta) = \frac{1}{n} \|X\beta - y\|^2
+\]
+
+Taking the gradient and setting it to zero yields:
+\[
+\hat{\beta} = (X^\top X)^{-1} X^\top y
+\]
+
+\subsection{Numerical Results}
+
+The estimated OLS coefficients using NumPy are:
+\[
+\hat{\beta} =
+\begin{bmatrix}
+-0.075997 \\
+3.019213 \\
+-1.998648 \\
+0.465321 \\
+0.028746 \\
+0.978880 \\
+0.005197 \\
+0.050117 \\
+-0.917746 \\
+1.951978 \\
+-0.012285 \\
+0.057589 \\
+0.027415
+\end{bmatrix}
+\]
+
+These coefficients exactly match those obtained using
+\texttt{sklearn.linear\_model.LinearRegression}, confirming the correctness of the
+closed-form OLS implementation.
+
+\subsection{Residual Diagnostics}
+
+Residuals versus fitted values and a Q--Q plot were analyzed.
+The residuals show no strong systematic pattern, suggesting approximate homoscedasticity.
+The Q--Q plot indicates mild deviations from normality in the tails, which is common
+in practical regression problems but does not severely violate model assumptions.
+
+\subsection{Leverage and Influence}
+
+The hat matrix was computed as:
+\[
+H = X (X^\top X)^{-1} X^\top
+\]
+
+The top ten high-leverage observations were:
+\[
+\{212, 168, 241, 124, 39, 293, 112, 240, 160, 96\}
+\]
+
+Cook’s distance identified the following influential points:
+\[
+\{155, 296, 267, 59, 286, 117, 86, 146, 293, 116\}
+\]
+
+These observations have the greatest potential impact on regression coefficients.
+Not all high-leverage points are influential, highlighting the importance of considering
+both leverage and residual magnitude.
+
+% ======================================================
+\section{Question 2: Salary Prediction and Bias Detection}
+% ======================================================
+
+\subsection{Exploratory Data Analysis}
+
+The dataset contains 12,000 employee records.
+The mean salary is \$105,862 with a standard deviation of \$28,251, indicating substantial
+salary dispersion and the presence of high-income outliers.
+Salary distributions differ across gender categories as observed from boxplots.
+
+\subsection{Preprocessing}
+
+Missing values were removed to ensure numerical stability.
+Categorical features were encoded using one-hot encoding with a reference category dropped
+to avoid multicollinearity.
+A stratified train-test split was performed using gender to preserve group proportions.
+
+\subsection{Model Training and Evaluation}
+
+An OLS Linear Regression model was trained.
+
+\begin{itemize}
+\item RMSE: \textbf{17,582.01}
+\item MAE: \textbf{7,465.70}
+\item $R^2$: \textbf{0.629}
+\end{itemize}
+
+The model explains approximately 63\% of the variance in employee salaries.
+
+\subsection{Fairness Analysis}
+
+Gender was treated as the protected attribute.
+
+\begin{center}
+\begin{tabular}{lcc}
+\toprule
+Metric & Male vs Female & Male vs Other \\
+\midrule
+Mean Prediction Difference & 5,225.21 & 1,405.19 \\
+MAE Difference & -179.18 & 966.34 \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+Male employees receive higher predicted salaries on average.
+However, the MAE difference between male and female employees is small, suggesting similar
+prediction accuracy across groups.
+
+\subsection{Residual Bias and Statistical Testing}
+
+A two-sample t-test on residuals between male and female groups produced a p-value of 0.064.
+At the 5\% significance level, this result indicates no statistically significant difference
+in mean residuals, suggesting the model does not systematically overestimate or underestimate
+salary for either group.
+
+% ======================================================
+\section{Question 3: Deep Neural Network Classifier}
+% ======================================================
+
+\subsection{Model Architecture}
+
+A deep neural network named \texttt{DigitClassifier} was designed with the following structure:
+\begin{itemize}
+\item Input layer of dimension 784
+\item Hidden layer 1: 256 neurons with ReLU activation
+\item Hidden layer 2: 128 neurons with ReLU activation
+\item Output layer: 10 logits corresponding to digit classes
+\end{itemize}
+
+\subsection{Training Setup}
+
+The model is trained for five epochs using the Adam optimizer with a learning rate of 0.001
+and CrossEntropyLoss. A batch size of 64 is used. The training loop consists of forward pass,
+loss computation, backward propagation, and optimizer updates.
+
+\subsection{Why ReLU is Preferred}
+
+ReLU is preferred over Sigmoid and Tanh for deep networks for two primary reasons:
+\begin{itemize}
+\item ReLU mitigates the vanishing gradient problem by maintaining non-saturating gradients
+for positive inputs.
+\item It is computationally efficient, enabling faster convergence during training.
+\end{itemize}
+
+\subsection{Role of Autograd}
+
+PyTorch’s autograd engine automatically tracks tensor operations to construct a dynamic
+computational graph during the forward pass.
+During backpropagation, autograd applies the chain rule to compute gradients of the loss
+with respect to model parameters, enabling efficient and flexible gradient-based optimization.
+
+\subsection{Implementation Note}
+
+The PyTorch implementation is provided as requested. Model execution was not performed,
+as the assignment assumes the availability of predefined data loaders.
+
+\end{document}
