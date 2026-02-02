@@ -1,0 +1,110 @@
+\documentclass[11pt]{article}
+
+\usepackage[a4paper,margin=1in]{geometry}
+\usepackage{amsmath}
+\usepackage{graphicx}
+\usepackage{hyperref}
+\usepackage{setspace}
+
+\setstretch{1.1}
+
+\title{\textbf{WiDS Kalman Filtered Trend Trader}\\
+Multi-Asset Portfolio Management}
+\author{Lavanya Padole 24B1292}
+
+\begin{document}
+\maketitle
+
+\section{Objective}
+
+The objective of this project is to extend a Kalman-filtered trend following strategy from a single asset to a multi-asset portfolio management framework.
+Instead of making trading decisions for one asset independently, the system dynamically allocates capital across multiple assets using Kalman-filtered trend information while maintaining strict causality and realistic backtesting assumptions.
+
+The primary goal is to move from single-asset trading to portfolio-level decision making using interpretable, rule-based logic.
+
+\section{Asset Universe and Data}
+
+The portfolio consists of the following assets:
+\begin{itemize}
+    \item Bitcoin (BTC): high volatility, high risk asset
+    \item Nifty 50: Indian equity market benchmark
+    \item Gold: defensive and hedge asset
+    \item Cash: risk-free holding
+\end{itemize}
+
+Daily price data from 2015 to 2024 is used for all assets.
+Data is obtained from Yahoo Finance using adjusted prices to ensure consistency.
+All asset time series are aligned on common timestamps, missing values are removed, and preprocessing is performed independently for each asset to avoid information leakage.
+
+Cash is modeled implicitly as unallocated capital, allowing the strategy to actively reduce market exposure during periods of unfavorable trends.
+
+\section{Kalman Filtering Methodology}
+
+A Kalman filter is applied independently to each asset's price series to extract latent trend information.
+The filter models asset prices using a linear state-space formulation with Gaussian process and observation noise.
+
+The Kalman filter provides a smoothed estimate of the underlying price trend while preserving causality.
+At each timestep, the filtered state depends only on information available up to that point, making it suitable for live trading and robust backtesting.
+
+Short-term trend momentum is derived from changes in the Kalman-filtered signal and is used as the primary input to the portfolio allocation logic.
+
+\section{Portfolio Strategy Design}
+
+At each timestep, the strategy performs the following steps:
+\begin{enumerate}
+    \item Observe Kalman-filtered trend estimates for all assets
+    \item Compute short-term trend momentum for each asset
+    \item Allocate capital only to assets with positive trend momentum
+    \item Distribute capital proportionally across positively trending assets
+    \item Allocate remaining capital to Cash
+\end{enumerate}
+
+This rule-based allocation mechanism ensures that capital naturally shifts toward safer assets during weak or uncertain market conditions.
+The logic is fully causal, interpretable, and avoids overfitting.
+
+\section{Transaction Costs}
+
+To discourage excessive rebalancing, a transaction cost of 0.1\% is applied to every change in portfolio allocation.
+Transaction costs are calculated based on portfolio turnover at each timestep and are explicitly subtracted from portfolio returns.
+This ensures realistic evaluation and meaningfully affects strategy behavior.
+
+\section{Backtesting Framework}
+
+The strategy is evaluated using a strictly causal backtesting framework:
+\begin{itemize}
+    \item Decisions at time $t$ use information only up to time $t$
+    \item Trades are executed at time $t+1$
+    \item No lookahead bias is introduced
+\end{itemize}
+
+The strategy is benchmarked against a buy-and-hold Nifty 50 portfolio to evaluate relative performance.
+
+\section{Performance Metrics and Results}
+
+The portfolio performance over the backtesting period is summarized using the following metrics:
+
+\begin{itemize}
+    \item \textbf{Annualized Return}: 0.63
+    \item \textbf{Annualized Volatility}: 0.45
+    \item \textbf{Sharpe Ratio}: 1.40
+    \item \textbf{Maximum Drawdown}: -0.56
+\end{itemize}
+
+The results indicate strong risk-adjusted performance, with a Sharpe ratio greater than one, suggesting efficient compensation for risk taken.
+While the strategy experiences periods of drawdown, capital allocation to cash helps limit prolonged downside exposure.
+Overall performance is competitive when compared to a Nifty 50 buy-and-hold benchmark.
+
+\section{Limitations and Future Improvements}
+
+The current approach has several limitations.
+Kalman filters assume linear dynamics and Gaussian noise, which financial markets often violate.
+Trend-based signals may underperform in strongly mean-reverting environments.
+
+Potential improvements include incorporating volatility-adjusted signals, regime detection mechanisms, reinforcement learning for adaptive allocation sizing, and more complex state-space models.
+
+\section{Conclusion}
+
+This project demonstrates how Kalman filtering can be extended from single-asset trend following to a multi-asset portfolio management system.
+By combining causal filtering, disciplined allocation rules, and realistic transaction costs, the strategy achieves stable and interpretable performance suitable for real-world deployment.
+
+\end{document}
